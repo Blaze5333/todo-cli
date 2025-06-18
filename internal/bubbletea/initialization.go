@@ -117,8 +117,7 @@ func renderTodos(todos []todo.Task, selected int, selected2 int) string {
 }
 
 func (m model) Init() tea.Cmd {
-	initialModel()
-	return tea.SetWindowTitle("Grocery List")
+	return nil
 }
 
 func (m model) View() string {
