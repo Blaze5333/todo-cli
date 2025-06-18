@@ -206,15 +206,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case modeView:
 				switch msg.String() {
 				case "q":
-					var currentUserIndex int
+					var currentUserIndex = -1
 					for i, todo := range wholeData {
 						if todo.Username == name {
+							wholeData[i].Task = m.Task
 							currentUserIndex = i
 							break
 						}
 					}
-					wholeData[currentUserIndex].Task = m.Task
-
+					if currentUserIndex == -1 {
+						wholeData = append(wholeData, todo.Todo{
+							Username: name,
+							Task:     m.Task,
+						})
+					}
 					err := strg.Save(wholeData)
 					if err != nil {
 						utils.ShowErrorMessage("Error Saving Tasks  : " + err.Error())
@@ -276,8 +281,9 @@ var name string
 
 func Start() {
 	name = user.CheckSession()
-	tasks, err := todo.GetTasks(name)
-	err = strg.Load(&wholeData)
+
+	tasks, _ := todo.GetTasks(name)
+	err := strg.Load(&wholeData)
 
 	if err != nil {
 		utils.ShowErrorMessage("Error fetching tasks: " + err.Error())
