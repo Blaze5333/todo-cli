@@ -2,6 +2,7 @@ package bubbletea
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"strconv"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/Blaze5333/todo-cli/internal/user"
 	"github.com/Blaze5333/todo-cli/utils"
 	"github.com/aquasecurity/table"
-
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -41,14 +41,31 @@ func initialModel() model {
 	t := textinput.New()
 	t.Placeholder = "Title"
 	t.Focus()
+	t.Width = 20
 	inputs[0] = t
 
 	d := textinput.New()
 	d.Placeholder = "Description"
+	d.Width = 20
 	inputs[1] = d
 
 	p := textinput.New()
 	p.Placeholder = "Priority"
+	p.CharLimit = 1
+	p.Validate = func(s string) error {
+		if s == "" {
+			return nil // Allow empty input for priority
+		}
+		if _, err := strconv.Atoi(s); err != nil {
+			return err // Return error if input is not a number
+		}
+		if s != "1" && s != "2" && s != "3" {
+			return errors.New("priority must be 1, 2, or 3") // Ensure priority is one of the valid options
+		}
+		return nil // Return nil if input is valid
+	}
+
+	p.Width = 20
 	inputs[2] = p
 
 	return model{
@@ -64,6 +81,7 @@ func renderTodos(todos []todo.Task, selected int, selected2 int) string {
 	tbl.SetHeaders("ID", "Title", "Description", "Priority", "Completed", "Created At", "Updated At")
 
 	tbl.SetHeaderStyle(table.StyleBold)
+
 	tbl.SetLineStyle(table.StyleMagenta)
 	tbl.SetDividers(table.UnicodeRoundedDividers)
 
@@ -73,16 +91,16 @@ func renderTodos(todos []todo.Task, selected int, selected2 int) string {
 		if task.Done {
 			completed = "✅"
 		}
-		var color string
+		var colort string
 		switch task.Priority {
 		case 1:
-			color = "high 🔴"
+			colort = "high 🔴"
 		case 2:
-			color = "medium 🟠"
+			colort = "medium 🟠"
 		case 3:
-			color = "low 🟡"
+			colort = "low 🟡"
 		default:
-			color = "⚪️"
+			colort = "⚪️"
 		}
 		id := strconv.Itoa(index)
 		title := task.Title
@@ -97,7 +115,7 @@ func renderTodos(todos []todo.Task, selected int, selected2 int) string {
 			case 2:
 				description = "👉 " + description
 			case 3:
-				color = "👉 " + color
+				colort = "👉 " + colort
 			}
 
 		}
@@ -106,11 +124,12 @@ func renderTodos(todos []todo.Task, selected int, selected2 int) string {
 			id,
 			title,
 			description,
-			color,
+			colort,
 			completed,
 			task.CreatedAt.Format("2006-01-02 15:04:05"),
 			task.UpdatedAt.Format("2006-01-02 15:04:05"),
 		)
+
 	}
 	tbl.Render()
 	return buf.String()
@@ -121,11 +140,12 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) View() string {
+
 	s := "TODO LIST\n\n"
 	s += renderTodos(m.Task, m.Cursor, m.Cursor2)
 	s += "\n[UP/DOWN] Select  [ENTER] Complete  [DEL] Delete  [A] Add  [U] Update the selected task  [Q] Quit\n"
 	if m.showDialog {
-		s := "Add New Todo\n\n"
+		s := "Add New Todo\n\n All fields are required.\n\n"
 		for i := range m.inputs {
 			s += m.inputs[i].View() + "\n"
 		}
@@ -156,6 +176,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.inputIndex = len(m.inputs) - 1
 				}
 			case "enter":
+				if m.inputIndex != len(m.inputs)-1 {
+					m.inputIndex++
+				}
+				if m.inputs[0].Value() == "" || m.inputs[1].Value() == "" || m.inputs[2].Value() == "" {
+					break
+				}
 
 				if m.UpdateTask != -1 {
 					priority, _ := strconv.Atoi(m.inputs[2].Value())
@@ -201,75 +227,74 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 
 		case tea.KeyMsg:
-			switch m.CurrentMode {
-			case modeView:
-				switch msg.String() {
-				case "q":
-					var currentUserIndex = -1
-					for i, todo := range wholeData {
-						if todo.Username == name {
-							wholeData[i].Task = m.Task
-							currentUserIndex = i
-							break
-						}
-					}
-					if currentUserIndex == -1 {
-						wholeData = append(wholeData, todo.Todo{
-							Username: name,
-							Task:     m.Task,
-						})
-					}
-					err := strg.Save(wholeData)
-					if err != nil {
-						utils.ShowErrorMessage("Error Saving Tasks  : " + err.Error())
-					}
-					return m, tea.Quit
-				case "right":
-					if m.Cursor2 < 3 {
-						m.Cursor2++
-					} else {
-						m.Cursor2 = 3
-					}
-				case "left":
-					if m.Cursor2 > 1 {
-						m.Cursor2--
-					} else {
-						m.Cursor2 = 0
-					}
-				case "up":
-					if m.Cursor > 0 {
-						m.Cursor--
-					}
-				case "down":
-					if m.Cursor < len(m.Task)-1 {
-						m.Cursor++
-					}
-				case "u":
-					m.inputs[0].SetValue(m.Task[m.Cursor].Title)
-					m.inputs[1].SetValue(m.Task[m.Cursor].Description)
-					m.inputs[2].SetValue(strconv.Itoa(m.Task[m.Cursor].Priority))
-					m.showDialog = true
-					m.inputIndex = 0
-					m.inputs[0].Focus()
-					m.UpdateTask = m.Cursor
-				case "enter":
-					m.Task[m.Cursor].Done = !m.Task[m.Cursor].Done
 
-				case "backspace":
-					if len(m.Task) > 0 {
-						m.Task = append(m.Task[:m.Cursor], m.Task[m.Cursor+1:]...)
-						if m.Cursor >= len(m.Task) {
-							m.Cursor = len(m.Task) - 1
-						}
-					}
-				case "a":
-					m.showDialog = true
-					m.inputIndex = 0
-					m.inputs[0].Focus()
+			switch msg.String() {
 
+			case "q":
+				var currentUserIndex = -1
+				for i, todo := range wholeData {
+					if todo.Username == name {
+						wholeData[i].Task = m.Task
+						currentUserIndex = i
+						break
+					}
 				}
+				if currentUserIndex == -1 {
+					wholeData = append(wholeData, todo.Todo{
+						Username: name,
+						Task:     m.Task,
+					})
+				}
+				err := strg.Save(wholeData)
+				if err != nil {
+					utils.ShowErrorMessage("Error Saving Tasks  : " + err.Error())
+				}
+				return m, tea.Quit
+			case "right":
+				if m.Cursor2 < 3 {
+					m.Cursor2++
+				} else {
+					m.Cursor2 = 3
+				}
+			case "left":
+				if m.Cursor2 > 1 {
+					m.Cursor2--
+				} else {
+					m.Cursor2 = 0
+				}
+			case "up":
+				if m.Cursor > 0 {
+					m.Cursor--
+				}
+			case "down":
+				if m.Cursor < len(m.Task)-1 {
+					m.Cursor++
+				}
+			case "u":
+				m.inputs[0].SetValue(m.Task[m.Cursor].Title)
+				m.inputs[1].SetValue(m.Task[m.Cursor].Description)
+				m.inputs[2].SetValue(strconv.Itoa(m.Task[m.Cursor].Priority))
+				m.showDialog = true
+				m.inputIndex = 0
+				m.inputs[0].Focus()
+				m.UpdateTask = m.Cursor
+			case "enter":
+				m.Task[m.Cursor].Done = !m.Task[m.Cursor].Done
+
+			case "backspace":
+				if len(m.Task) > 0 {
+					m.Task = append(m.Task[:m.Cursor], m.Task[m.Cursor+1:]...)
+					if m.Cursor >= len(m.Task) {
+						m.Cursor = len(m.Task) - 1
+					}
+				}
+			case "a":
+				m.showDialog = true
+				m.inputIndex = 0
+				m.inputs[0].Focus()
 
 			}
+
 		}
 	}
 	return m, nil

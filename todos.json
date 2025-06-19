@@ -1,7 +1,24 @@
 [
   {
     "username": "Mustafa*53",
-    "task": []
+    "task": [
+      {
+        "title": "Make cofee",
+        "description": "Add extra coffee powder and sugar and make it strong",
+        "done": true,
+        "created_at": "2025-06-18T23:45:51.8497+05:30",
+        "updated_at": "2025-06-18T23:45:51.8497+05:30",
+        "priority": 3
+      },
+      {
+        "title": "kn",
+        "description": "a",
+        "done": false,
+        "created_at": "2025-06-18T23:55:06.513142+05:30",
+        "updated_at": "2025-06-18T23:55:06.513142+05:30",
+        "priority": 2
+      }
+    ]
   },
   {
     "username": "Arwa",
@@ -13,6 +30,48 @@
         "created_at": "2025-06-18T22:57:56.793409+05:30",
         "updated_at": "2025-06-18T22:57:56.793409+05:30",
         "priority": 2
+      }
+    ]
+  },
+  {
+    "username": "Admin",
+    "task": [
+      {
+        "title": "Coffee",
+        "description": "Make strong coffee at 9 PM",
+        "done": false,
+        "created_at": "2025-06-19T10:03:46.310285+05:30",
+        "updated_at": "2025-06-19T10:03:46.310285+05:30",
+        "priority": 2
+      },
+      {
+        "title": "Books",
+        "description": "Read Books - Harry Potter",
+        "done": true,
+        "created_at": "2025-06-19T10:04:25.687294+05:30",
+        "updated_at": "2025-06-19T10:04:25.687294+05:30",
+        "priority": 3
+      },
+      {
+        "title": "Go",
+        "description": "Learn the Gin framework in Golang",
+        "done": true,
+        "created_at": "2025-06-19T10:05:13.562951+05:30",
+        "updated_at": "2025-06-19T10:05:13.562951+05:30",
+        "priority": 1
+      }
+    ]
+  },
+  {
+    "username": "John@123",
+    "task": [
+      {
+        "title": "Golang",
+        "description": "Learn Golang advance",
+        "done": true,
+        "created_at": "2025-06-19T13:10:52.029765+05:30",
+        "updated_at": "2025-06-19T13:11:24.782929+05:30",
+        "priority": 3
       }
     ]
   }
