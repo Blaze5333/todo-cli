@@ -91,7 +91,7 @@ In the interactive list view, select a task and press the appropriate key to del
 
 When in the interactive task list view:
 - **Arrow keys**: Navigate through tasks
-- **Enter**: Select a task
+- **Enter**: Mark task as complete
 - **a**: Add a new task
 - **d**: Delete the selected task
 - **c**: Mark the selected task as complete/incomplete
@@ -166,4 +166,3 @@ This project is licensed under the terms of the license included in the reposito
 
 - [Cobra](https://github.com/spf13/cobra) for the CLI framework
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) for the terminal UI
-- All contributors and users of this project
